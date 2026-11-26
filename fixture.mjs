@@ -1,0 +1,1 @@
+export default {"config":{"sourceChain":1,"sourceContract":"synthetic","threshold":80},"events":[{"chain":1,"emitter":"synthetic","id":"a","risk":90},{"chain":1,"emitter":"synthetic","id":"a","risk":90}]};
