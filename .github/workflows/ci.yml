@@ -20,3 +20,12 @@ jobs:
         env:
           QA_PLAYWRIGHT_ROOT: ${{ runner.temp }}/ui-qa
         run: node scripts/ui-smoke.mjs
+      - name: Compile official Omni contracts
+        env:
+          SOLC_ROOT: ${{ runner.temp }}/solc
+          REACTIVE_LIB: ${{ runner.temp }}/reactive-lib-omni
+        run: |
+          npm install --prefix "$SOLC_ROOT" --no-save --package-lock=false --ignore-scripts --no-audit --no-fund solc@0.8.29
+          git clone --depth 1 --branch v0.1.0 https://github.com/Reactive-Network/reactive-lib-omni.git "$REACTIVE_LIB"
+          test "$(git -C "$REACTIVE_LIB" rev-parse HEAD)" = 3ade0dcf1d27e67e5783ef807e73a1b9e0c0cce8
+          node scripts/compile-contracts.mjs
