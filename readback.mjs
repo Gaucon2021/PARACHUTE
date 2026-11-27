@@ -39,9 +39,9 @@ export async function verify(input,request=rpc){
  const eventId=hashId(11155111,sourceEmitter,input.sourceTx,l.logIndex);
  const matches=dst.receipt.logs.filter(t=>equal(t?.address,targetController)&&equal(t.topics?.[0],sig("SafetyTriggered(bytes32,uint256)"))&&equal(t.topics?.[1],eventId)&&t.topics.length===2&&hash.test(t.data)&&BigInt(t.data)===risk&&t.removed!==true);
  requireCondition(matches.length===1,"No unique bound target event");
- const call=(selector,args="")=>request("target","eth_call",[{to:targetController,data:sig(selector).slice(0,10)+args},"finalized"]);
- const [paused,consumed,emitter,threshold,code]=await Promise.all([call("paused()"),call("consumed(bytes32)",eventId.slice(2)),call("emitter()"),call("threshold()"),request("target","eth_getCode",[targetController,"finalized"])]);
+ const call=(selector,args="")=>request("target","eth_call",[{to:targetController,data:sig(selector).slice(0,10)+args},dst.head.number]);
+ const [paused,consumed,emitter,threshold,code]=await Promise.all([call("paused()"),call("consumed(bytes32)",eventId.slice(2)),call("emitter()"),call("threshold()"),request("target","eth_getCode",[targetController,dst.head.number])]);
  requireCondition([paused,consumed,emitter,threshold].every(x=>hash.test(x))&&BigInt(paused)===1n&&BigInt(consumed)===1n&&BigInt(emitter)===BigInt(sourceEmitter)&&BigInt(threshold)>0n&&BigInt(threshold)<=risk&&typeof code==="string"&&/^0x(?:[0-9a-fA-F]{2})+$/.test(code),"Target finalized state does not match");
- return {status:"MATCHED_RPC_EVIDENCE",sourceChain:11155111,targetChain:84532,sourceTx:input.sourceTx,targetTx:input.targetTx,sourceEmitter,targetController,eventId,risk:Number(risk),sourceBlock:src.receipt.blockNumber,targetBlock:dst.receipt.blockNumber,paused:true,consumed:true,limits:"Public RPC observation only; deployed bytecode identity and actual Reactive callback origin are not independently authenticated."};
+ return {status:"MATCHED_RPC_EVIDENCE",sourceChain:11155111,targetChain:84532,sourceTx:input.sourceTx,targetTx:input.targetTx,sourceEmitter,targetController,eventId,risk:Number(risk),sourceBlock:src.receipt.blockNumber,targetBlock:dst.receipt.blockNumber,stateReadBlock:dst.head.number,paused:true,consumed:true,limits:"Public RPC observation only; deployed bytecode identity and actual Reactive callback origin are not independently authenticated."};
 }
 export {keccak,sig,hashId};
