@@ -16,3 +16,5 @@ test("Keccak abc known vector",()=>assert.equal(sig("abc"),"0x4e03657aea45a94fc7
 test("paused selector",()=>assert.equal(sig("paused()").slice(0,10),"0x5c975abb"));
 test("matching fixture readback",async()=>assert.equal((await verify(input,mock())).status,"MATCHED_RPC_EVIDENCE"));
 for(const [name,options] of [["wrong chain",{wrongChain:true}],["unfinalized",{unfinalized:true}],["noncanonical",{noncanonical:true}],["forged target",{forged:true}],["unpaused",{unpaused:true}]])test(name,async()=>assert.rejects(verify(input,mock(options))));
+
+test("all target state reads use the same finalized block",async()=>{const base=mock(),blocks=[];const result=await verify(input,async(side,method,params)=>{if(method==="eth_call"||method==="eth_getCode")blocks.push(params[1]);return base(side,method,params)});assert.equal(blocks.length,5);assert.deepEqual([...new Set(blocks)],["0x20"]);assert.equal(result.stateReadBlock,"0x20");});
